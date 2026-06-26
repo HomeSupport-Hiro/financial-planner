@@ -114,7 +114,7 @@
   // ===== NAVIGATION =====
   function setupNavigation() {
     // Sidebar links
-    $(Dom.navLinks).forEach(link => {
+    $$(Dom.navLinks).forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const page = link.dataset.page;
@@ -124,7 +124,7 @@
     });
 
     // Bottom nav links
-    $(Dom.bottomLinks).forEach(link => {
+    $$(Dom.bottomLinks).forEach(link => {
       link.addEventListener('click', (e) => {
         e.preventDefault();
         const page = link.dataset.page;
@@ -138,19 +138,19 @@
     state.currentPage = page;
 
     // Hide all pages
-    $(Dom.pages).forEach(p => p.classList.remove('active'));
+    $$(Dom.pages).forEach(p => p.classList.remove('active'));
 
     // Show target page
     const target = document.getElementById(`page-${page}`);
     if (target) target.classList.add('active');
 
     // Update sidebar active
-    $(Dom.navLinks).forEach(l => {
+    $$(Dom.navLinks).forEach(l => {
       l.classList.toggle('active', l.dataset.page === page);
     });
 
     // Update bottom nav active
-    $(Dom.bottomLinks).forEach(l => {
+    $$(Dom.bottomLinks).forEach(l => {
       l.classList.toggle('active', l.dataset.page === page);
     });
   }
