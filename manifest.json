@@ -4,8 +4,8 @@
   "description": "Personal Financial Planner by Vina, Henry & Hiro",
   "start_url": ".",
   "display": "standalone",
-  "background_color": "#1B1B3A",
-  "theme_color": "#2D2D5E",
+  "background_color": "#0d0d0d",
+  "theme_color": "#1a1a1a",
   "orientation": "portrait-primary",
   "icons": [
     {
