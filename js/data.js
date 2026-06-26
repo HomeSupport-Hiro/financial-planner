@@ -6,7 +6,7 @@ const AppData = (() => {
   'use strict';
 
   // ===== POS UANG =====
-  const funds = [
+  const defaultFunds = [
     { id: 'Blu', name: 'Blu', desc: 'Rekening transaksi harian', balance: 0, startBalance: 0, target: '' },
     { id: 'Comfort Life', name: 'Comfort Life', desc: 'Dana darurat', balance: 0, startBalance: 0, target: '' },
     { id: 'Hiroshi', name: 'Hiroshi', desc: 'Tabungan Hiro', balance: 0, startBalance: 0, target: '' },
@@ -17,38 +17,37 @@ const AppData = (() => {
     { id: 'E-money', name: 'E-money', desc: 'GoPay/OVO/dll', balance: 0, startBalance: 0, target: '' }
   ];
 
-  // ===== KATEGORI =====
-  const incomeCategories = ['Paycheck', 'Interest', 'Repayment', 'Gifts', 'Other'];
-  const expenseCategories = [
+  // ===== KATEGORI DEFAULT =====
+  const defaultIncomeCategories = ['Paycheck', 'Interest', 'Repayment', 'Gifts', 'Other'];
+  const defaultExpenseCategories = [
     'Food', 'Groceries', 'Health & Medical', 'Home', 'Travel Expenses',
     'Utilities', 'Phone Credit', 'Entertainment', 'Skin & Body Care',
     "Hiroshi's", "Mpi's", "Henry's", 'Gifts', 'Public Transportation',
-    'Event', 'Loan', 'Debt', 'Zakat', 'Other'
+    'Event', 'Loan', 'Debt', 'Zakat', 'Admin Fee', 'Other'
   ];
-  const allCategories = [...incomeCategories, ...expenseCategories];
 
   // PIC mapping
-  const pic = {
+  const defaultPic = {
     'Food': 'Vina/Henry', 'Groceries': 'Vina', 'Health & Medical': 'Vina',
     'Home': 'Henry', 'Travel Expenses': 'Henry', 'Utilities': 'Henry',
     'Phone Credit': 'Vina/Henry', 'Entertainment': 'Vina/Henry',
     'Skin & Body Care': 'Vina', "Hiroshi's": 'Vina', "Mpi's": 'Vina',
     "Henry's": 'Henry', 'Gifts': 'Vina/Henry', 'Public Transportation': 'Henry',
     'Event': 'Vina/Henry', 'Loan': 'Henry', 'Debt': 'Henry',
-    'Zakat': 'Henry', 'Other': 'Vina/Henry'
+    'Zakat': 'Henry', 'Admin Fee': 'Henry', 'Other': 'Vina/Henry'
   };
 
   // Prioritas mapping
-  const prioritas = {
+  const defaultPrioritas = {
     'Food': 'Wajib', 'Groceries': 'Wajib', 'Health & Medical': 'Wajib',
     'Home': 'Wajib', 'Travel Expenses': 'Wajib', 'Utilities': 'Wajib',
     'Phone Credit': 'Wajib', 'Entertainment': 'Boleh', 'Skin & Body Care': 'Boleh',
     "Hiroshi's": 'Wajib', "Mpi's": 'Wajib', "Henry's": 'Wajib',
     'Gifts': 'Boleh', 'Public Transportation': 'Wajib', 'Event': 'Boleh',
-    'Loan': 'Wajib', 'Debt': 'Wajib', 'Zakat': 'Wajib', 'Other': 'Boleh'
+    'Loan': 'Wajib', 'Debt': 'Wajib', 'Zakat': 'Wajib', 'Admin Fee': 'Wajib', 'Other': 'Boleh'
   };
 
-  // ===== SAMPLE DATA (from Excel) =====
+  // ===== SAMPLE DATA =====
   const sampleTransactions = [
     { id: 1,  tanggal: '2026-06-01', jenis: 'Masuk',  kategori: 'Paycheck',      keterangan: 'Gaji Mei 2026',           nominal: 5200000,  posAsal: 'Blu', posTujuan: '',      input: 'Chat', oleh: 'Vina' },
     { id: 2,  tanggal: '2026-06-01', jenis: 'Keluar', kategori: 'Food',          keterangan: 'Paketan Vina',           nominal: 38000,    posAsal: 'Blu', posTujuan: '',      input: 'Chat', oleh: 'Vina' },
@@ -73,38 +72,40 @@ const AppData = (() => {
     { id: 21, tanggal: '2026-06-20', jenis: 'Masuk',  kategori: 'Gifts',          keterangan: 'Dari Mbak Elly',          nominal: 50000,    posAsal: 'Hiroshi', posTujuan: '', input: 'Chat', oleh: 'Vina' }
   ];
 
-  // ===== BUDGET DATA =====
-  // Income targets (all Rp 0 for now)
   const budgetIncomeTarget = {};
-  incomeCategories.forEach(c => { budgetIncomeTarget[c] = 0; });
-
-  // Expense budget (all Rp 0 for now)
   const budgetExpenseTarget = {};
-  expenseCategories.forEach(c => { budgetExpenseTarget[c] = 0; });
+  defaultIncomeCategories.forEach(c => { budgetIncomeTarget[c] = 0; });
+  defaultExpenseCategories.forEach(c => { budgetExpenseTarget[c] = 0; });
 
   // ===== LOCAL STORAGE KEYS =====
   const STORAGE_KEYS = {
     transactions: 'finplanner_transactions',
     funds: 'finplanner_funds',
     budgetIncome: 'finplanner_budget_income',
-    budgetExpense: 'finplanner_budget_expense'
+    budgetExpense: 'finplanner_budget_expense',
+    incomeCats: 'finplanner_income_cats',
+    expenseCats: 'finplanner_expense_cats',
+    picData: 'finplanner_pic',
+    prioritasData: 'finplanner_prioritas'
   };
 
   // ===== HELPERS =====
   function formatRp(amount) {
-    if (amount === undefined || amount === null || isNaN(amount)) return 'Rp 0';
-    return 'Rp ' + Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    if (amount === undefined || amount === null || isNaN(amount)) return 'Rp\u00a00,00';
+    // Always show 2 decimal places
+    const fixed = amount.toFixed(2);
+    const parts = fixed.split('.');
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return 'Rp\u00a0' + intPart + ',' + parts[1];
   }
 
   function parseDate(dateStr) {
-    // Accept: 2026-06-01 or 1-Jun-26
     if (!dateStr) return new Date();
     if (dateStr.includes('-')) {
       const parts = dateStr.split('-');
       if (parts[0].length === 4) {
         return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
       }
-      // Try DD-Mon-YY
       const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       const monthIdx = months.indexOf(parts[1]);
       if (monthIdx >= 0) {
@@ -117,7 +118,6 @@ const AppData = (() => {
 
   function formatDateDisplay(dateStr) {
     const d = parseDate(dateStr);
-    const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
     return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
   }
@@ -142,8 +142,8 @@ const AppData = (() => {
   function loadData(key, fallback) {
     try {
       const data = localStorage.getItem(key);
-      return data ? JSON.parse(data) : fallback;
-    } catch { return fallback; }
+      return data ? JSON.parse(data) : (typeof fallback === 'function' ? fallback() : fallback);
+    } catch { return typeof fallback === 'function' ? fallback() : fallback; }
   }
 
   function saveData(key, data) {
@@ -155,56 +155,150 @@ const AppData = (() => {
 
   // ===== PUBLIC API =====
   return {
-    // Data getters
-    getFunds() { return loadData(STORAGE_KEYS.funds, funds); },
-    getTransactions() { return loadData(STORAGE_KEYS.transactions, sampleTransactions); },
-    getBudgetIncome() { return loadData(STORAGE_KEYS.budgetIncome, budgetIncomeTarget); },
-    getBudgetExpense() { return loadData(STORAGE_KEYS.budgetExpense, budgetExpenseTarget); },
-
-    // Data setters
-    setFunds(data) { return saveData(STORAGE_KEYS.funds, data); },
-    setTransactions(data) { return saveData(STORAGE_KEYS.transactions, data); },
-    setBudgetIncome(data) { return saveData(STORAGE_KEYS.budgetIncome, data); },
-    setBudgetExpense(data) { return saveData(STORAGE_KEYS.budgetExpense, data); },
-
-    // Reset to defaults
-    resetData() {
-      localStorage.removeItem(STORAGE_KEYS.transactions);
-      localStorage.removeItem(STORAGE_KEYS.funds);
-      localStorage.removeItem(STORAGE_KEYS.budgetIncome);
-      localStorage.removeItem(STORAGE_KEYS.budgetExpense);
+    // -- Categories (dynamic) --
+    getIncomeCategories() {
+      return loadData(STORAGE_KEYS.incomeCats, [...defaultIncomeCategories]);
+    },
+    setIncomeCategories(arr) {
+      return saveData(STORAGE_KEYS.incomeCats, arr);
+    },
+    getExpenseCategories() {
+      return loadData(STORAGE_KEYS.expenseCats, [...defaultExpenseCategories]);
+    },
+    setExpenseCategories(arr) {
+      return saveData(STORAGE_KEYS.expenseCats, arr);
+    },
+    addExpenseCategory(name, pic, prio) {
+      const cats = this.getExpenseCategories();
+      if (cats.includes(name)) return false;
+      cats.push(name);
+      this.setExpenseCategories(cats);
+      // Save PIC & prioritas
+      const pics = this.getPicData();
+      pics[name] = pic || 'Vina/Henry';
+      this.setPicData(pics);
+      const prios = this.getPrioritasData();
+      prios[name] = prio || 'Boleh';
+      this.setPrioritasData(prios);
+      return true;
+    },
+    removeExpenseCategory(name) {
+      let cats = this.getExpenseCategories();
+      if (cats.length <= 1) return false;
+      cats = cats.filter(c => c !== name);
+      this.setExpenseCategories(cats);
+      const pics = this.getPicData();
+      delete pics[name];
+      this.setPicData(pics);
+      const prios = this.getPrioritasData();
+      delete prios[name];
+      this.setPrioritasData(prios);
+      return true;
+    },
+    addIncomeCategory(name) {
+      const cats = this.getIncomeCategories();
+      if (cats.includes(name)) return false;
+      cats.push(name);
+      this.setIncomeCategories(cats);
+      return true;
+    },
+    removeIncomeCategory(name) {
+      let cats = this.getIncomeCategories();
+      if (cats.length <= 1) return false;
+      cats = cats.filter(c => c !== name);
+      this.setIncomeCategories(cats);
+      return true;
     },
 
-    // Helpers
+    // -- PIC & Prioritas (dynamic) --
+    getPicData() {
+      return loadData(STORAGE_KEYS.picData, () => ({...defaultPic}));
+    },
+    setPicData(obj) {
+      return saveData(STORAGE_KEYS.picData, obj);
+    },
+    getPrioritasData() {
+      return loadData(STORAGE_KEYS.prioritasData, () => ({...defaultPrioritas}));
+    },
+    setPrioritasData(obj) {
+      return saveData(STORAGE_KEYS.prioritasData, obj);
+    },
+    getPIC(cat) {
+      const pics = this.getPicData();
+      return pics[cat] || 'Vina/Henry';
+    },
+    getPrioritas(cat) {
+      const prios = this.getPrioritasData();
+      return prios[cat] || 'Boleh';
+    },
+
+    // -- Funds (dynamic) --
+    getFunds() { return loadData(STORAGE_KEYS.funds, () => JSON.parse(JSON.stringify(defaultFunds))); },
+    setFunds(data) { return saveData(STORAGE_KEYS.funds, data); },
+    addFund(id, name, desc, target) {
+      const funds = this.getFunds();
+      if (funds.some(f => f.id === id)) return false;
+      funds.push({ id, name, desc: desc || '', balance: 0, startBalance: 0, target: target || '' });
+      this.setFunds(funds);
+      return true;
+    },
+    removeFund(id) {
+      let funds = this.getFunds();
+      if (funds.length <= 1) return false;
+      funds = funds.filter(f => f.id !== id);
+      this.setFunds(funds);
+      return true;
+    },
+
+    // -- Transactions --
+    getTransactions() { return loadData(STORAGE_KEYS.transactions, () => JSON.parse(JSON.stringify(sampleTransactions))); },
+    setTransactions(data) { return saveData(STORAGE_KEYS.transactions, data); },
+
+    // -- Budget --
+    getBudgetIncome() {
+      const saved = loadData(STORAGE_KEYS.budgetIncome, null);
+      if (saved) return saved;
+      const cats = this.getIncomeCategories();
+      const def = {};
+      cats.forEach(c => { def[c] = 0; });
+      return def;
+    },
+    setBudgetIncome(data) { return saveData(STORAGE_KEYS.budgetIncome, data); },
+    getBudgetExpense() {
+      const saved = loadData(STORAGE_KEYS.budgetExpense, null);
+      if (saved) return saved;
+      const cats = this.getExpenseCategories();
+      const def = {};
+      cats.forEach(c => { def[c] = 0; });
+      return def;
+    },
+    setBudgetExpense(data) { return saveData(STORAGE_KEYS.budgetExpense, data); },
+
+    // Reset
+    resetData() {
+      Object.values(STORAGE_KEYS).forEach(k => localStorage.removeItem(k));
+    },
+
+    // -- Helpers --
     formatRp,
     formatDateDisplay,
     getMonth,
     isCurrentMonth,
+    defaultIncomeCategories,
+    defaultExpenseCategories,
 
-    // Constants
-    incomeCategories,
-    expenseCategories,
-    allCategories,
-    funds,
-    getPIC(cat) { return pic[cat] || 'Vina/Henry'; },
-    getPrioritas(cat) { return prioritas[cat] || 'Boleh'; },
-
-    // Add transaction
+    // -- Transaction CRUD --
     addTransaction(trans) {
       const all = this.getTransactions();
       trans.id = generateId();
-      // Ensure id is unique
       while (all.some(t => t.id === trans.id)) {
         trans.id = generateId();
       }
       all.push(trans);
       this.setTransactions(all);
-      // Update funds
       this.updateFundsFromTransactions();
       return trans;
     },
-
-    // Update transaction
     updateTransaction(id, updates) {
       const all = this.getTransactions();
       const idx = all.findIndex(t => t.id === id);
@@ -214,8 +308,6 @@ const AppData = (() => {
       this.updateFundsFromTransactions();
       return true;
     },
-
-    // Delete transaction
     deleteTransaction(id) {
       let all = this.getTransactions();
       all = all.filter(t => t.id !== id);
@@ -224,16 +316,13 @@ const AppData = (() => {
       return true;
     },
 
-    // Recalculate fund balances from transactions
+    // -- Fund recalculation --
     updateFundsFromTransactions() {
       const all = this.getTransactions();
       const funds = this.getFunds();
-
-      // Reset balances
       funds.forEach(f => { f.balance = 0; });
-
       all.forEach(t => {
-        const nominal = parseInt(t.nominal) || 0;
+        const nominal = parseFloat(t.nominal) || 0;
         if (t.jenis === 'Masuk') {
           const f = funds.find(x => x.id === t.posAsal);
           if (f) f.balance += nominal;
@@ -247,45 +336,36 @@ const AppData = (() => {
           if (to) to.balance += nominal;
         }
       });
-
       this.setFunds(funds);
       return funds;
     },
 
-    // Get current month totals
+    // -- Aggregations --
     getCurrentMonthTotals() {
       const all = this.getTransactions();
       const income = all.filter(t => t.jenis === 'Masuk');
       const expense = all.filter(t => t.jenis === 'Keluar');
       const transfer = all.filter(t => t.jenis === 'Pindah');
-
-      const totalIncome = income.reduce((s, t) => s + (parseInt(t.nominal) || 0), 0);
-      const totalExpense = expense.reduce((s, t) => s + (parseInt(t.nominal) || 0), 0);
-      const totalTransfer = transfer.reduce((s, t) => s + (parseInt(t.nominal) || 0), 0);
-
+      const totalIncome = income.reduce((s, t) => s + (parseFloat(t.nominal) || 0), 0);
+      const totalExpense = expense.reduce((s, t) => s + (parseFloat(t.nominal) || 0), 0);
+      const totalTransfer = transfer.reduce((s, t) => s + (parseFloat(t.nominal) || 0), 0);
       return { totalIncome, totalExpense, totalTransfer, sisa: totalIncome - totalExpense };
     },
-
-    // Get expense totals by category
     getExpenseByCategory() {
       const all = this.getTransactions();
-      const expenses = all.filter(t => t.jenis === 'Keluar');
       const result = {};
-      expenses.forEach(t => {
+      all.filter(t => t.jenis === 'Keluar').forEach(t => {
         const cat = t.kategori;
-        result[cat] = (result[cat] || 0) + (parseInt(t.nominal) || 0);
+        result[cat] = (result[cat] || 0) + (parseFloat(t.nominal) || 0);
       });
       return result;
     },
-
-    // Get income totals by category
     getIncomeByCategory() {
       const all = this.getTransactions();
-      const incomes = all.filter(t => t.jenis === 'Masuk');
       const result = {};
-      incomes.forEach(t => {
+      all.filter(t => t.jenis === 'Masuk').forEach(t => {
         const cat = t.kategori;
-        result[cat] = (result[cat] || 0) + (parseInt(t.nominal) || 0);
+        result[cat] = (result[cat] || 0) + (parseFloat(t.nominal) || 0);
       });
       return result;
     }
