@@ -290,6 +290,19 @@ const SupabaseData = (() => {
     return result;
   }
 
+  // ===== GET INCOME BY CATEGORY =====
+  function getIncomeByCategory() {
+    const current = new Date();
+    const month = current.getFullYear() + '-' + String(current.getMonth() + 1).padStart(2, '0');
+    const result = {};
+    cache.transactions.forEach(t => {
+      if (t.jenis === 'Masuk' && getMonth(t.tanggal) === month) {
+        result[t.kategori] = (result[t.kategori] || 0) + t.nominal;
+      }
+    });
+    return result;
+  }
+
   return {
     loadAllData,
     saveDoc,
@@ -325,6 +338,7 @@ const SupabaseData = (() => {
     generateId,
     updateFundsFromTransactions,
     getCurrentMonthTotals,
-    getExpenseByCategory
+    getExpenseByCategory,
+    getIncomeByCategory
   };
 })();

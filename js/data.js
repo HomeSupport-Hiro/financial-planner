@@ -51,6 +51,7 @@ const AppData = (() => {
     generateId: () => SupabaseData.generateId(),
     updateFundsFromTransactions: () => SupabaseData.updateFundsFromTransactions(),
     getCurrentMonthTotals: () => SupabaseData.getCurrentMonthTotals(),
-    getExpenseByCategory: () => SupabaseData.getExpenseByCategory()
+    getExpenseByCategory: () => SupabaseData.getExpenseByCategory(),
+    getIncomeByCategory: () => SupabaseData.getIncomeByCategory()
   };
 })();

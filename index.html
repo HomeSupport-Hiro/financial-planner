@@ -123,6 +123,9 @@
           <div class="card card-sisa"><div class="card-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64b5f6" stroke-width="2.5"><circle cx="12" cy="12" r="3" fill="#64b5f6"/><circle cx="12" cy="12" r="9" stroke="#64b5f6"/></svg></div><div class="card-label">Sisa / Nabung</div><div class="card-value mono" id="totalSisa">Rp&nbsp;0,00</div></div>
         </div>
 
+        <!-- BUDGET ALERTS -->
+        <div class="budget-alerts" id="budgetAlerts"></div>
+
         <div class="section-card">
           <div class="section-title">Pos Uang</div>
           <div class="funds-grid" id="fundsGrid"></div>
@@ -132,7 +135,7 @@
           <div class="section-title">Budget vs Realisasi</div>
           <div class="table-responsive">
             <table class="data-table">
-              <thead><tr><th>Kategori</th><th>Budget</th><th>Realisasi</th><th>Sisa</th><th>Status</th></tr></thead>
+              <thead><tr><th>Kategori</th><th>Budget</th><th>Realisasi</th><th>Sisa</th><th>Penggunaan</th><th>Status</th></tr></thead>
               <tbody id="dashboardBudgetBody"></tbody>
             </table>
           </div>
@@ -178,7 +181,7 @@
           <div class="section-title">Budget Pengeluaran</div>
           <div class="table-responsive">
             <table class="data-table">
-              <thead><tr><th>Kategori</th><th>Budget <span class="text-muted">(klik untuk edit)</span></th><th>PIC</th><th>Prioritas</th></tr></thead>
+              <thead><tr><th>Kategori</th><th>Budget <span class="text-muted">(klik untuk edit)</span></th><th>PIC</th><th>Prioritas</th><th>Penggunaan</th></tr></thead>
               <tbody id="budgetExpenseBody"></tbody>
             </table>
           </div>
