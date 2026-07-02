@@ -14,7 +14,8 @@ const SupabaseData = (() => {
     incomeCats: [],
     expenseCats: [],
     picData: {},
-    prioritasData: {}
+    prioritasData: {},
+    stockItems: []
   };
 
   // Load all data from Supabase
@@ -50,6 +51,9 @@ const SupabaseData = (() => {
             break;
           case 'prioritas':
             cache.prioritasData = row.data.data || {};
+            break;
+          case 'stock':
+            cache.stockItems = row.data.items || [];
             break;
         }
       });
@@ -303,6 +307,29 @@ const SupabaseData = (() => {
     return result;
   }
 
+  // ===== STOCK ITEMS =====
+  function getStockItems() {
+    return [...cache.stockItems];
+  }
+
+  async function addStockItem(item) {
+    item.id = Date.now() + Math.floor(Math.random() * 1000);
+    cache.stockItems.push(item);
+    return await saveDoc('stock', { items: cache.stockItems });
+  }
+
+  async function updateStockItem(id, updates) {
+    const idx = cache.stockItems.findIndex(s => s.id === id);
+    if (idx === -1) return false;
+    cache.stockItems[idx] = { ...cache.stockItems[idx], ...updates };
+    return await saveDoc('stock', { items: cache.stockItems });
+  }
+
+  async function deleteStockItem(id) {
+    cache.stockItems = cache.stockItems.filter(s => s.id !== id);
+    return await saveDoc('stock', { items: cache.stockItems });
+  }
+
   return {
     loadAllData,
     saveDoc,
@@ -339,6 +366,10 @@ const SupabaseData = (() => {
     updateFundsFromTransactions,
     getCurrentMonthTotals,
     getExpenseByCategory,
-    getIncomeByCategory
+    getIncomeByCategory,
+    getStockItems,
+    addStockItem,
+    updateStockItem,
+    deleteStockItem
   };
 })();

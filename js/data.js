@@ -52,6 +52,11 @@ const AppData = (() => {
     updateFundsFromTransactions: () => SupabaseData.updateFundsFromTransactions(),
     getCurrentMonthTotals: () => SupabaseData.getCurrentMonthTotals(),
     getExpenseByCategory: () => SupabaseData.getExpenseByCategory(),
-    getIncomeByCategory: () => SupabaseData.getIncomeByCategory()
+    getIncomeByCategory: () => SupabaseData.getIncomeByCategory(),
+    
+    getStockItems: () => SupabaseData.getStockItems(),
+    addStockItem: (item) => SupabaseData.addStockItem(item),
+    updateStockItem: (id, updates) => SupabaseData.updateStockItem(id, updates),
+    deleteStockItem: (id) => SupabaseData.deleteStockItem(id)
   };
 })();

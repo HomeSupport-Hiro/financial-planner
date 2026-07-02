@@ -186,6 +186,22 @@
     transferOleh: '#transferOleh',
     transferSaldoDari: '#transferSaldoDari',
     transferSaldoKe: '#transferSaldoKe',
+
+    // Stock
+    stockModal: '#stockModal',
+    stockModalTitle: '#stockModalTitle',
+    stockModalClose: '#stockModalClose',
+    stockModalCancel: '#stockModalCancel',
+    stockModalSave: '#stockModalSave',
+    stockName: '#stockName',
+    stockKebutuhan: '#stockKebutuhan',
+    stockSisa: '#stockSisa',
+    stockSatuan: '#stockSatuan',
+    stockCatatan: '#stockCatatan',
+    addStockBtn: '#addStockBtn',
+    stockBody: '#stockBody',
+    stockSummary: '#stockSummary',
+    stockFooter: '#stockFooter',
   };
 
   // ===== STATE =====
@@ -307,6 +323,12 @@
     byId('transferSave').addEventListener('click', saveTransfer);
     byId('transferDari').addEventListener('change', updateTransferSaldo);
     byId('transferKe').addEventListener('change', updateTransferSaldo);
+
+    // Stock
+    byId('addStockBtn').addEventListener('click', () => openStockModal());
+    byId('stockModalClose').addEventListener('click', closeStockModal);
+    byId('stockModalCancel').addEventListener('click', closeStockModal);
+    byId('stockModalSave').addEventListener('click', saveStock);
   }
 
   function byId(id) {
@@ -620,6 +642,167 @@
     alert('Transfer berhasil! ' + posAsal + ' → ' + posTujuan + ': ' + AppData.formatRp(nominal));
   }
 
+  // ===== STOCK MODAL =====
+  let editStockId = null;
+
+  function openStockModal(item) {
+    editStockId = item ? item.id : null;
+    byId('stockModalTitle').innerHTML = '<i class="fas fa-box"></i> ' + (item ? 'Edit Stock' : 'Tambah Stock');
+    byId('stockName').value = item ? item.name : '';
+    byId('stockKebutuhan').value = item ? item.kebutuhan : '';
+    byId('stockSisa').value = item ? (item.sisa !== undefined ? item.sisa : '') : '';
+    byId('stockSatuan').value = item ? (item.satuan || 'pcs') : 'pcs';
+    byId('stockCatatan').value = item ? (item.catatan || '') : '';
+    byId('stockModal').classList.add('open');
+  }
+
+  function closeStockModal() {
+    byId('stockModal').classList.remove('open');
+    editStockId = null;
+  }
+
+  function saveStock() {
+    const name = byId('stockName').value.trim();
+    const kebutuhan = parseFloat(byId('stockKebutuhan').value) || 0;
+    const sisa = parseFloat(byId('stockSisa').value) || 0;
+    const satuan = byId('stockSatuan').value;
+    const catatan = byId('stockCatatan').value.trim();
+
+    if (!name) { alert('Nama barang harus diisi!'); return; }
+    if (kebutuhan <= 0) { alert('Kebutuhan per bulan harus lebih dari 0!'); return; }
+
+    const itemData = { name, kebutuhan, sisa, satuan, catatan };
+
+    try {
+      if (editStockId) {
+        AppData.updateStockItem(editStockId, itemData);
+      } else {
+        AppData.addStockItem(itemData);
+      }
+    } catch(e) {
+      alert('Gagal menyimpan: ' + e.message);
+      return;
+    }
+
+    closeStockModal();
+    renderAll();
+  }
+
+  function deleteStock(id, name) {
+    if (!confirm('Hapus "' + name + '" dari daftar stock?')) return;
+    try {
+      AppData.deleteStockItem(id);
+    } catch(e) {
+      alert('Gagal menghapus: ' + e.message);
+      return;
+    }
+    renderAll();
+  }
+
+  // --- RENDER STOCK ---
+  function renderStock() {
+    let items = [];
+    try { items = AppData.getStockItems(); } catch(e) {}
+
+    const summary = byId('stockSummary');
+    if (summary) {
+      let habis = 0, hampirHabis = 0, aman = 0;
+      items.forEach(item => {
+        const ratio = item.kebutuhan > 0 ? item.sisa / item.kebutuhan : 0;
+        if (ratio <= 0) habis++;
+        else if (ratio < 0.3) hampirHabis++;
+        else aman++;
+      });
+      summary.innerHTML =
+        '<div class="stock-stat"><div class="stock-stat-num" style="color:var(--negative)">' + habis + '</div><div class="stock-stat-label">Habis</div></div>' +
+        '<div class="stock-stat"><div class="stock-stat-num" style="color:var(--warning)">' + hampirHabis + '</div><div class="stock-stat-label">Hampir Habis</div></div>' +
+        '<div class="stock-stat"><div class="stock-stat-num" style="color:var(--positive)">' + aman + '</div><div class="stock-stat-label">Aman</div></div>' +
+        '<div class="stock-stat"><div class="stock-stat-num">' + items.length + '</div><div class="stock-stat-label">Total Item</div></div>';
+    }
+
+    const body = byId('stockBody');
+    if (!body) return;
+    body.innerHTML = '';
+
+    if (items.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px;">Belum ada item stock. Klik + untuk menambah.</td></tr>';
+      setText('stockFooter', 'Tidak ada item');
+      return;
+    }
+
+    // Sort: habis dulu, lalu hampir habis, lalu aman
+    items.sort((a, b) => {
+      const ratioA = a.kebutuhan > 0 ? a.sisa / a.kebutuhan : 0;
+      const ratioB = b.kebutuhan > 0 ? b.sisa / b.kebutuhan : 0;
+      return ratioA - ratioB;
+    });
+
+    items.forEach(item => {
+      const ratio = item.kebutuhan > 0 ? item.sisa / item.kebutuhan : 0;
+      let statusText, statusIcon, statusCls, rowCls;
+      if (ratio <= 0) {
+        statusText = 'Habis'; statusIcon = '🔴'; statusCls = 'status-over'; rowCls = 'row-over';
+      } else if (ratio < 0.3) {
+        statusText = 'Hampir Habis'; statusIcon = '⚠️'; statusCls = 'status-warning'; rowCls = 'row-warning';
+      } else {
+        statusText = 'Aman'; statusIcon = '✅'; statusCls = 'status-aman'; rowCls = '';
+      }
+
+      const pct = Math.round(ratio * 100);
+      const barColor = ratio <= 0 ? 'var(--negative)' : (ratio < 0.3 ? 'var(--warning)' : 'var(--positive)');
+
+      const tr = document.createElement('tr');
+      tr.className = rowCls;
+      tr.innerHTML =
+        '<td><strong>' + item.name + '</strong>' + (item.catatan ? '<br><small class="text-muted">' + item.catatan + '</small>' : '') + '</td>' +
+        '<td class="text-center">' + item.kebutuhan + ' ' + (item.satuan || 'pcs') + '</td>' +
+        '<td class="text-center" style="font-weight:600">' + item.sisa + ' ' + (item.satuan || 'pcs') + '</td>' +
+        '<td class="text-center text-muted">' + (item.satuan || 'pcs') + '</td>' +
+        '<td><div class="progress-mini"><div class="progress-bar-mini" style="width:' + Math.min(pct, 100) + '%;background:' + barColor + '"></div></div><span class="pct-badge ' + statusCls + '">' + statusIcon + ' ' + statusText + '</span></td>' +
+        '<td><div class="stock-actions">' +
+          '<button class="btn-icon btn-edit" title="Edit" data-id="' + item.id + '"><i class="fas fa-pen"></i></button>' +
+          '<button class="btn-icon btn-update-sisa" title="Update Sisa" data-id="' + item.id + '"><i class="fas fa-rotate"></i></button>' +
+          '<button class="btn-icon btn-delete" title="Hapus" data-id="' + item.id + '"><i class="fas fa-trash"></i></button>' +
+        '</div></td>';
+      body.appendChild(tr);
+    });
+
+    // Attach event listeners
+    body.querySelectorAll('.btn-edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = parseInt(btn.dataset.id);
+        const item = items.find(i => i.id === id);
+        if (item) openStockModal(item);
+      });
+    });
+
+    body.querySelectorAll('.btn-update-sisa').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = parseInt(btn.dataset.id);
+        const item = items.find(i => i.id === id);
+        if (!item) return;
+        const newSisa = prompt('Update sisa stock "' + item.name + '":', item.sisa);
+        if (newSisa !== null && !isNaN(parseFloat(newSisa))) {
+          AppData.updateStockItem(id, { sisa: parseFloat(newSisa) });
+          renderAll();
+        }
+      });
+    });
+
+    body.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = parseInt(btn.dataset.id);
+        const item = items.find(i => i.id === id);
+        if (item) deleteStock(id, item.name);
+      });
+    });
+
+    setText('stockFooter', 'Total ' + items.length + ' item stock');
+  }
+
   // ===== RENDER =====
   function renderAll() {
     try { AppData.updateFundsFromTransactions(); } catch(e) { console.warn('updateFunds:', e); }
@@ -629,6 +812,7 @@
     try { renderReport(); } catch(e) { console.warn('report:', e); }
     try { renderFunds(); } catch(e) { console.warn('funds:', e); }
     try { renderGuide(); } catch(e) { console.warn('guide:', e); }
+    try { renderStock(); } catch(e) { console.warn('stock:', e); }
   }
 
   // --- DASHBOARD ---
