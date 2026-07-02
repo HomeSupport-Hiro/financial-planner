@@ -198,6 +198,8 @@
     stockSisa: '#stockSisa',
     stockSatuan: '#stockSatuan',
     stockCatatan: '#stockCatatan',
+    stockKategori: '#stockKategori',
+    stockFilterKategori: '#stockFilterKategori',
     addStockBtn: '#addStockBtn',
     stockBody: '#stockBody',
     stockSummary: '#stockSummary',
@@ -329,6 +331,7 @@
     byId('stockModalClose').addEventListener('click', closeStockModal);
     byId('stockModalCancel').addEventListener('click', closeStockModal);
     byId('stockModalSave').addEventListener('click', saveStock);
+    byId('stockFilterKategori').addEventListener('change', renderStock);
   }
 
   function byId(id) {
@@ -652,6 +655,7 @@
     byId('stockKebutuhan').value = item ? item.kebutuhan : '';
     byId('stockSisa').value = item ? (item.sisa !== undefined ? item.sisa : '') : '';
     byId('stockSatuan').value = item ? (item.satuan || 'pcs') : 'pcs';
+    byId('stockKategori').value = item ? (item.kategori || 'Groceries') : 'Groceries';
     byId('stockCatatan').value = item ? (item.catatan || '') : '';
     byId('stockModal').classList.add('open');
   }
@@ -666,12 +670,13 @@
     const kebutuhan = parseFloat(byId('stockKebutuhan').value) || 0;
     const sisa = parseFloat(byId('stockSisa').value) || 0;
     const satuan = byId('stockSatuan').value;
+    const kategori = byId('stockKategori').value;
     const catatan = byId('stockCatatan').value.trim();
 
     if (!name) { alert('Nama barang harus diisi!'); return; }
     if (kebutuhan <= 0) { alert('Kebutuhan per bulan harus lebih dari 0!'); return; }
 
-    const itemData = { name, kebutuhan, sisa, satuan, catatan };
+    const itemData = { name, kebutuhan, sisa, satuan, kategori, catatan };
 
     try {
       if (editStockId) {
@@ -704,6 +709,12 @@
     let items = [];
     try { items = AppData.getStockItems(); } catch(e) {}
 
+    // Apply category filter
+    const filterKategori = byId('stockFilterKategori').value;
+    if (filterKategori) {
+      items = items.filter(i => i.kategori === filterKategori);
+    }
+
     const summary = byId('stockSummary');
     if (summary) {
       let habis = 0, hampirHabis = 0, aman = 0;
@@ -725,7 +736,7 @@
     body.innerHTML = '';
 
     if (items.length === 0) {
-      body.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px;">Belum ada item stock. Klik + untuk menambah.</td></tr>';
+      body.innerHTML = '<tr><td colspan="7" class="text-center text-muted" style="padding:30px;">Belum ada item stock. Klik + untuk menambah.</td></tr>';
       setText('stockFooter', 'Tidak ada item');
       return;
     }
@@ -751,10 +762,14 @@
       const pct = Math.round(ratio * 100);
       const barColor = ratio <= 0 ? 'var(--negative)' : (ratio < 0.3 ? 'var(--warning)' : 'var(--positive)');
 
+      const catColors = { 'Groceries': '#8bc34a', 'Home': '#64b5f6', 'Henry': '#ce93d8', 'Vina': '#f48fb1', 'Hiro': '#ffcc80' };
+      const catColor = catColors[item.kategori] || '#888';
+
       const tr = document.createElement('tr');
       tr.className = rowCls;
       tr.innerHTML =
         '<td><strong>' + item.name + '</strong>' + (item.catatan ? '<br><small class="text-muted">' + item.catatan + '</small>' : '') + '</td>' +
+        '<td><span class="kategori-badge" style="background:' + catColor + '20;color:' + catColor + '">' + (item.kategori || '-') + '</span></td>' +
         '<td class="text-center">' + item.kebutuhan + ' ' + (item.satuan || 'pcs') + '</td>' +
         '<td class="text-center" style="font-weight:600">' + item.sisa + ' ' + (item.satuan || 'pcs') + '</td>' +
         '<td class="text-center text-muted">' + (item.satuan || 'pcs') + '</td>' +

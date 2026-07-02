@@ -226,9 +226,19 @@
         </div>
         <div class="section-card">
           <div class="section-title">Daftar Stock Barang</div>
+          <div class="filter-bar">
+            <select id="stockFilterKategori" class="filter-select">
+              <option value="">Semua Kategori</option>
+              <option>Groceries</option>
+              <option>Home</option>
+              <option>Henry</option>
+              <option>Vina</option>
+              <option>Hiro</option>
+            </select>
+          </div>
           <div class="table-responsive">
             <table class="data-table">
-              <thead><tr><th>Barang</th><th>Kebutuhan/Bulan</th><th>Sisa</th><th>Satuan</th><th>Status</th><th>Aksi</th></tr></thead>
+              <thead><tr><th>Barang</th><th>Kategori</th><th>Kebutuhan/Bulan</th><th>Sisa</th><th>Satuan</th><th>Status</th><th>Aksi</th></tr></thead>
               <tbody id="stockBody"></tbody>
             </table>
           </div>
@@ -364,6 +374,16 @@
             <option>sachet</option>
             <option>karung</option>
             <option>roll</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Kategori</label>
+          <select id="stockKategori">
+            <option>Groceries</option>
+            <option>Home</option>
+            <option>Henry</option>
+            <option>Vina</option>
+            <option>Hiro</option>
           </select>
         </div>
         <div class="form-group">
